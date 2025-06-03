@@ -4,8 +4,6 @@ import faker
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from booking.models import Booking
-
 User = get_user_model()
 
 fake = faker.Faker()

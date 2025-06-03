@@ -16,13 +16,11 @@ class Command(BaseCommand):
 
         # Создание пользователей
         admin = User.objects.create_user(
-            username='admin',
             email='admin@example.com',
             password='1234'
         )
 
         empty_user = User.objects.create_user(
-            username='user',
             email='user@example.com',
             password='1234'
         )

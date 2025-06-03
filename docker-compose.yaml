@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    command: sh -c "python manage.py wait_for_db && python manage.py migrate && python manage.py filldb && python manage.py collectstatic --noinput && gunicorn flashcards.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+    expose:
+      - "8000"
+    networks:
+      - net
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DEBUG=True
+      - DJANGO_DB_HOST=db
+      - DJANGO_DB_PORT=5432
+      - DJANGO_DB_NAME=flashcards
+      - DJANGO_DB_USER=postgres
+      - DJANGO_DB_PASSWORD=12345678
+
+  db:
+    image: postgres:14
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - net
+    environment:
+      POSTGRES_DB: flashcards
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345678
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flashcards"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - static_volume:/static
+    ports:
+      - "80:80"
+    networks:
+      - net
+    depends_on:
+      - web
+
+networks:
+  net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  static_volume:
